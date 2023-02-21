@@ -10,7 +10,6 @@
 #include <set>
 #include <cassert>
 #include <map>
-#include "robin_hood.h"
 
 int main(int argc, char **argv)
 {
