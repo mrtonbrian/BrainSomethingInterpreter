@@ -211,7 +211,7 @@ class Interpreter {
             switch (program.at(programInd)) {
                 case '+': {
                     int numPlus = 1;
-                    while (program.at(programInd) == '+' && program.at(programInd + 1) == '+') {
+                    while (programInd < programSize - 1 && program.at(programInd) == '+' && program.at(programInd + 1) == '+') {
                         numPlus++;
                         programInd++;
                     }
@@ -221,7 +221,7 @@ class Interpreter {
                 case '-': {
                     int numMinus = 1;
 
-                    while (program.at(programInd) == '-' && program.at(programInd + 1) == '-') {
+                    while (programInd < programSize - 1 && program.at(programInd) == '-' && program.at(programInd + 1) == '-') {
                         numMinus++;
                         programInd++;
                     }
@@ -231,7 +231,7 @@ class Interpreter {
                 case '>': {
                     int numRight = 1;
 
-                    while (program.at(programInd) == '>' && program.at(programInd + 1) == '>') {
+                    while (programInd < programSize - 1 && program.at(programInd) == '>' && program.at(programInd + 1) == '>') {
                         numRight++;
                         programInd++;
                     }
@@ -241,7 +241,7 @@ class Interpreter {
                 case '<': {
                     int numLeft = 1;
 
-                    while (program.at(programInd) == '<' && program.at(programInd + 1) == '<') {
+                    while (programInd < programSize - 1 && program.at(programInd) == '<' && program.at(programInd + 1) == '<') {
                         numLeft++;
                         programInd++;
                     }
@@ -289,6 +289,8 @@ class Interpreter {
         size_t operationIndex = 0;
 
         size_t operationSize = operations.size();
+        std::cout << operationSize << std::endl;
+        return;
         while (operationIndex < operationSize) {
             Operation * currentOperation = operations[operationIndex];
             currentOperation->operate(tape);
