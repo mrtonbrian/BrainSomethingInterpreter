@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     std::vector<int> leftBracketPositions;
 
     std::vector<char> v = {'>', '<', '+', '-', '.', ',', '[', ']'};
-    robin_hood::unordered_set<char> allowedChars(v.begin(), v.end());
+    std::unordered_set<char> allowedChars(v.begin(), v.end());
 
 
     std::ifstream file(argv[1]);
