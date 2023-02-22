@@ -68,7 +68,7 @@ class RightArrow : public Operation {
         nextOperation = currentOperationIndex + 1;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         tape.forward_n(num_times);
     }
 };
@@ -82,7 +82,7 @@ class LeftArrow : public Operation {
         nextOperation = currentOperationIndex + 1;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         tape.backwards_n(num_times);
     }
 };
@@ -96,7 +96,7 @@ class PlusSign : public Operation {
         nextOperation = currentOperationIndex + 1;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         tape.increment_n(num_times);
     }
 };
@@ -111,7 +111,7 @@ class MinusSign : public Operation {
         nextOperation = currentOperationIndex + 1;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         tape.decrement_n(num_times);
     }
 };
@@ -123,7 +123,7 @@ class Comma : public Operation {
         nextOperation = currentOperationIndex + 1;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         tape.input();
     }
 };
@@ -134,7 +134,7 @@ class Period : public Operation {
         nextOperation = currentOperationIndex + 1;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         tape.print();
     }
 };
@@ -152,7 +152,7 @@ class LeftBracket : public Operation {
         this->rightBracketIndex = rightBracketIndex;
     }
 
-    void operate(Tape& tape) override {
+    void operate(Tape& tape) override final {
         if (tape.read() == 0) {
             nextOperation = rightBracketIndex + 1;
         } else {
@@ -289,8 +289,6 @@ class Interpreter {
         size_t operationIndex = 0;
 
         size_t operationSize = operations.size();
-        std::cout << operationSize << std::endl;
-        return;
         while (operationIndex < operationSize) {
             Operation * currentOperation = operations[operationIndex];
             currentOperation->operate(tape);
