@@ -7,6 +7,17 @@
 #include <fstream>
 #include <algorithm>
 
+enum OperationType {
+    OperationLeftArrow,
+    OperationRightArrow,
+    OperationPlusSign,
+    OperationMinusSign,
+    OperationComma,
+    OperationPeriod,
+    OperationLeftBracket,
+    OperationRightBracket
+};
+
 class Tape {
     std::vector<char> tape;
     std::size_t dataPointer;
@@ -49,152 +60,14 @@ class Tape {
     }
 };
 
-class Operation {
-    protected:
-    size_t nextOperation = -1;
-    public:
-    virtual void operate(Tape& tape) {}
-
-    size_t getNextOperation() {
-        return nextOperation;
-    }
-};
-
-class RightArrow : public Operation {
-    int num_times;
-    public:
-    RightArrow(int num_times, size_t currentOperationIndex) {
-        this->num_times = num_times;
-        nextOperation = currentOperationIndex + 1;
-    }
-
-    void operate(Tape& tape) override final {
-        tape.forward_n(num_times);
-    }
-};
-
-class LeftArrow : public Operation {
-    int num_times;
-
-    public:
-    LeftArrow(int num_times, size_t currentOperationIndex) {
-        this->num_times = num_times;
-        nextOperation = currentOperationIndex + 1;
-    }
-
-    void operate(Tape& tape) override final {
-        tape.backwards_n(num_times);
-    }
-};
-
-class PlusSign : public Operation {
-    int num_times;
-
-    public:
-    PlusSign(int num_times, size_t currentOperationIndex) {
-        this->num_times = num_times;
-        nextOperation = currentOperationIndex + 1;
-    }
-
-    void operate(Tape& tape) override final {
-        tape.increment_n(num_times);
-    }
-};
-
-
-class MinusSign : public Operation {
-    int num_times;
-
-    public:
-    MinusSign(int num_times, size_t currentOperationIndex) {
-        this->num_times = num_times;
-        nextOperation = currentOperationIndex + 1;
-    }
-
-    void operate(Tape& tape) override final {
-        tape.decrement_n(num_times);
-    }
-};
-
-
-class Comma : public Operation {
-    public:
-    Comma(size_t currentOperationIndex) {
-        nextOperation = currentOperationIndex + 1;
-    }
-
-    void operate(Tape& tape) override final {
-        tape.input();
-    }
-};
-
-class Period : public Operation {
-    public:
-    Period(size_t currentOperationIndex) {
-        nextOperation = currentOperationIndex + 1;
-    }
-
-    void operate(Tape& tape) override final {
-        tape.print();
-    }
-};
-
-class LeftBracket : public Operation {
-    size_t currentOperationIndex;
-
-    size_t rightBracketIndex = -1;
-    public:
-    LeftBracket(size_t currentOperationIndex) {
-        this->currentOperationIndex = currentOperationIndex;
-    }
-
-    void setRightBracketIndex(size_t rightBracketIndex) {
-        this->rightBracketIndex = rightBracketIndex;
-    }
-
-    void operate(Tape& tape) override final {
-        if (tape.read() == 0) {
-            nextOperation = rightBracketIndex + 1;
-        } else {
-            nextOperation = currentOperationIndex + 1;
-        }
-    }
-};
-
-class RightBracket : public Operation {
-    size_t currentOperationIndex;
-
-    size_t leftBracketIndex;
-    public:
-    RightBracket(size_t currentOperationIndex) {
-        this->currentOperationIndex = currentOperationIndex;
-    }
-
-    void setLeftBracketIndex(size_t leftBracketIndex) {
-        this->leftBracketIndex = leftBracketIndex;
-    }
-
-    void operate(Tape& tape) {
-        if (tape.read() != 0) {
-            nextOperation = leftBracketIndex + 1;
-        } else {
-            nextOperation = currentOperationIndex + 1;
-        }
-    }
-};
-
 class Interpreter {
     Tape tape;
-    std::vector<Operation *> operations;
+    std::vector<OperationType> operations;
+    std::vector<int> num_times;
+    std::vector<size_t> corresponding_index;
 
     public:
     Interpreter() {}
-
-    ~Interpreter() {
-        for (Operation * operation : operations) {
-            free(operation);
-        }
-    }
 
     void parseFile(std::string& filename) {
         std::ifstream file(filename);
@@ -216,7 +89,9 @@ class Interpreter {
                         programInd++;
                     }
 
-                    operations.push_back(new PlusSign(numPlus, operations.size()));
+                    operations.push_back(OperationPlusSign);
+                    num_times.push_back(numPlus);
+                    corresponding_index.push_back(-1);
                 } break;
                 case '-': {
                     int numMinus = 1;
@@ -226,7 +101,9 @@ class Interpreter {
                         programInd++;
                     }
 
-                    operations.push_back(new MinusSign(numMinus, operations.size()));
+                    operations.push_back(OperationMinusSign);
+                    num_times.push_back(numMinus);
+                    corresponding_index.push_back(-1);
                 } break;
                 case '>': {
                     int numRight = 1;
@@ -236,7 +113,9 @@ class Interpreter {
                         programInd++;
                     }
 
-                    operations.push_back(new RightArrow(numRight, operations.size()));
+                    operations.push_back(OperationRightArrow);
+                    num_times.push_back(numRight);
+                    corresponding_index.push_back(-1);
                 } break;
                 case '<': {
                     int numLeft = 1;
@@ -246,17 +125,25 @@ class Interpreter {
                         programInd++;
                     }
 
-                    operations.push_back(new LeftArrow(numLeft, operations.size()));
+                    operations.push_back(OperationLeftArrow);
+                    num_times.push_back(numLeft);
+                    corresponding_index.push_back(-1);
                 } break;
                 case '.': {
-                    operations.push_back(new Period(operations.size()));
+                    operations.push_back(OperationPeriod);
+                    num_times.push_back(1);
+                    corresponding_index.push_back(-1);
                 } break;
                 case ',': {
-                    operations.push_back(new Comma(operations.size()));
+                    operations.push_back(OperationComma);
+                    num_times.push_back(1);
+                    corresponding_index.push_back(-1);
                 } break;
                 case '[': {
                     leftBracketStack.push_back(operations.size());
-                    operations.push_back(new LeftBracket(operations.size()));
+                    operations.push_back(OperationLeftBracket);
+                    num_times.push_back(1);
+                    corresponding_index.push_back(-1);
                 } break;
                 case ']': {
                     if (leftBracketStack.size() == 0) {
@@ -265,14 +152,14 @@ class Interpreter {
                     }
                     
                     size_t correspBracketIndex = leftBracketStack.back();
-                    LeftBracket * correspBracket = static_cast<LeftBracket*>(operations.at(correspBracketIndex));
-                    RightBracket * newBracket = new RightBracket(operations.size());
-
-                    correspBracket->setRightBracketIndex(operations.size());
-                    newBracket->setLeftBracketIndex(correspBracketIndex);
-
+        
                     leftBracketStack.pop_back();
-                    operations.push_back(static_cast<Operation *>(newBracket));
+
+                    corresponding_index.push_back(correspBracketIndex);
+                    corresponding_index[correspBracketIndex] = operations.size();
+                    
+                    operations.push_back(OperationRightBracket);
+                    num_times.push_back(1);
                 } break;
             }
 
@@ -290,16 +177,48 @@ class Interpreter {
 
         size_t operationSize = operations.size();
         while (operationIndex < operationSize) {
-            Operation * currentOperation = operations[operationIndex];
-            currentOperation->operate(tape);
-            operationIndex = currentOperation->getNextOperation();
+            switch (operations[operationIndex]) {
+            case OperationRightArrow:
+                tape.forward_n(num_times[operationIndex]);
+                break;
+            case OperationLeftArrow:
+                tape.backwards_n(num_times[operationIndex]);
+                break;
+            case OperationPlusSign:
+                tape.increment_n(num_times[operationIndex]);
+                break;
+            case OperationMinusSign:
+                tape.decrement_n(num_times[operationIndex]);
+                break;
+            case OperationComma:
+                tape.input();
+                break;
+            case OperationPeriod:
+                tape.print();
+                break;
+            case OperationLeftBracket:
+                if (tape.read() == 0) {
+                    operationIndex = corresponding_index[operationIndex];
+                }
+                break;
+            case OperationRightBracket:
+                if (tape.read() != 0) {
+                    operationIndex = corresponding_index[operationIndex];
+                }
+                break;
+            default:
+                break;
+            }
+
+            operationIndex++;
         }
     }
 };
 
 int main(int argc, char **argv) {
     if (argc == 1) {
-        std::cerr << "No filename specified!" << std::endl;
+        std::cerr << "Error: No filename specified!" << std::endl;
+        return 1;
     }
 
     Interpreter interpreter;

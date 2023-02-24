@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-I.
-LDFLAGS = -L/usr/include/absl/container
+LDFLAGS =
 INCLUDE = -Iinclude -I/usr/local/include -I/usr/include
 
 interpreter: interpreter.cpp
