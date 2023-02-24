@@ -7,6 +7,7 @@ Some benchmarks:
 | Basic interpreter          | 29.4s        | 12.1s   |
 | After operator compression | 11.3s        | 15.7s   |
 | Operation compression + removing virtual functions | 7.2s | 7.6s |
+| After removing the tape class | 6.6s | 7.2s |
 
 cat.b: From https://esolangs.org/wiki/Brainfuck
 

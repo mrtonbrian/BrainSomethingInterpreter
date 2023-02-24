@@ -18,56 +18,19 @@ enum OperationType {
     OperationRightBracket
 };
 
-class Tape {
-    std::vector<char> tape;
-    std::size_t dataPointer;
-
-    public:
-    Tape() {
-        tape = std::vector<char>(30000, 0);
-        dataPointer = 0;    
-    }
-
-    void forward_n(int n) {
-        dataPointer += n;
-        if (dataPointer > tape.size()) {
-            tape.resize(tape.size() * 2, 0);
-        }
-    }
-
-    void backwards_n(int n) {
-        dataPointer = std::max(dataPointer - n, (size_t) 0);
-    }
-
-    void increment_n(int n) {
-        tape[dataPointer] += n;
-    }
-
-    void decrement_n(int n) {
-        tape[dataPointer] -= n;
-    }
-
-    void input() {
-        std::cin >> tape[dataPointer]; 
-    }
-
-    void print() {
-        std::cout << tape[dataPointer] << std::flush;
-    }
-
-    char read() {
-        return tape[dataPointer];
-    }
-};
-
 class Interpreter {
-    Tape tape;
     std::vector<OperationType> operations;
     std::vector<int> num_times;
     std::vector<size_t> corresponding_index;
 
+    std::vector<char> tape;
+    std::size_t dataPointer;
+
     public:
-    Interpreter() {}
+    Interpreter() {
+        tape = std::vector<char>(30000, 0);
+        dataPointer = 0;
+    }
 
     void parseFile(std::string& filename) {
         std::ifstream file(filename);
@@ -179,30 +142,34 @@ class Interpreter {
         while (operationIndex < operationSize) {
             switch (operations[operationIndex]) {
             case OperationRightArrow:
-                tape.forward_n(num_times[operationIndex]);
+                dataPointer += num_times[operationIndex];
+                if (dataPointer > tape.size()) {
+                    tape.resize(tape.size() * 2, 0);
+                }
+
                 break;
             case OperationLeftArrow:
-                tape.backwards_n(num_times[operationIndex]);
+                dataPointer = std::max(dataPointer - num_times[operationIndex], (size_t) 0);
                 break;
             case OperationPlusSign:
-                tape.increment_n(num_times[operationIndex]);
+                tape[dataPointer] += num_times[operationIndex];
                 break;
             case OperationMinusSign:
-                tape.decrement_n(num_times[operationIndex]);
+                tape[dataPointer] -= num_times[operationIndex];
                 break;
             case OperationComma:
-                tape.input();
+                std::cin >> tape[dataPointer]; 
                 break;
             case OperationPeriod:
-                tape.print();
+                std::cout << tape[dataPointer] << std::flush;
                 break;
             case OperationLeftBracket:
-                if (tape.read() == 0) {
+                if (tape[dataPointer] == 0) {
                     operationIndex = corresponding_index[operationIndex];
                 }
                 break;
             case OperationRightBracket:
-                if (tape.read() != 0) {
+                if (tape[dataPointer] != 0) {
                     operationIndex = corresponding_index[operationIndex];
                 }
                 break;
