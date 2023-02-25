@@ -15,7 +15,8 @@ enum OperationType {
     OperationComma,
     OperationPeriod,
     OperationLeftBracket,
-    OperationRightBracket
+    OperationRightBracket,
+    OperationClear
 };
 
 class Interpreter {
@@ -23,12 +24,12 @@ class Interpreter {
     std::vector<int> num_times;
     std::vector<size_t> corresponding_index;
 
-    std::vector<char> tape;
+    std::vector<uint8_t> tape;
     std::size_t dataPointer;
 
     public:
     Interpreter() {
-        tape = std::vector<char>(30000, 0);
+        tape = std::vector<uint8_t>(30000, 0);
         dataPointer = 0;
     }
 
@@ -103,10 +104,21 @@ class Interpreter {
                     corresponding_index.push_back(-1);
                 } break;
                 case '[': {
-                    leftBracketStack.push_back(operations.size());
-                    operations.push_back(OperationLeftBracket);
-                    num_times.push_back(1);
-                    corresponding_index.push_back(-1);
+                    // Clear command
+                    if (programInd < programSize - 2 &&
+                            (program.at(programInd + 1) == '-' || program.at(programInd + 1) == '+') 
+                            && program.at(programInd + 2) == ']') {
+                        operations.push_back(OperationClear);
+                        num_times.push_back(1);
+                        corresponding_index.push_back(-1);
+                        programInd += 2;
+                    } else {
+                        leftBracketStack.push_back(operations.size());
+
+                        operations.push_back(OperationLeftBracket);
+                        num_times.push_back(1);
+                        corresponding_index.push_back(-1);
+                    }
                 } break;
                 case ']': {
                     if (leftBracketStack.size() == 0) {
@@ -161,7 +173,7 @@ class Interpreter {
                 std::cin >> tape[dataPointer]; 
                 break;
             case OperationPeriod:
-                std::cout << tape[dataPointer] << std::flush;
+                std::cout << (char) tape[dataPointer] << std::flush;
                 break;
             case OperationLeftBracket:
                 if (tape[dataPointer] == 0) {
@@ -173,6 +185,8 @@ class Interpreter {
                     operationIndex = corresponding_index[operationIndex];
                 }
                 break;
+            case OperationClear:
+                tape[dataPointer] = 0;
             default:
                 break;
             }
