@@ -1,2 +1,4 @@
 callgrind.out.*
+interpeter
+interpreter.dSYM/
 .vscode/
