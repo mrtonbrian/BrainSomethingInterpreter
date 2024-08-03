@@ -48,7 +48,7 @@ class Interpreter {
             switch (program.at(programInd)) {
                 case '+': {
                     int numPlus = 1;
-                    while (programInd < programSize - 1 && program.at(programInd) == '+' && program.at(programInd + 1) == '+') {
+                    while (programInd < programSize - 1 && program.at(programInd + 1) == '+') {
                         numPlus++;
                         programInd++;
                     }
@@ -60,7 +60,7 @@ class Interpreter {
                 case '-': {
                     int numMinus = 1;
 
-                    while (programInd < programSize - 1 && program.at(programInd) == '-' && program.at(programInd + 1) == '-') {
+                    while (programInd < programSize - 1 && program.at(programInd + 1) == '-') {
                         numMinus++;
                         programInd++;
                     }
@@ -72,7 +72,7 @@ class Interpreter {
                 case '>': {
                     int numRight = 1;
 
-                    while (programInd < programSize - 1 && program.at(programInd) == '>' && program.at(programInd + 1) == '>') {
+                    while (programInd < programSize - 1 && program.at(programInd + 1) == '>') {
                         numRight++;
                         programInd++;
                     }
@@ -84,7 +84,7 @@ class Interpreter {
                 case '<': {
                     int numLeft = 1;
 
-                    while (programInd < programSize - 1 && program.at(programInd) == '<' && program.at(programInd + 1) == '<') {
+                    while (programInd < programSize - 1 && program.at(programInd + 1) == '<') {
                         numLeft++;
                         programInd++;
                     }
@@ -149,8 +149,9 @@ class Interpreter {
 
     void interpret() {
         size_t operationIndex = 0;
-
         size_t operationSize = operations.size();
+        uint8_t flushCount = 0;
+
         while (operationIndex < operationSize) {
             switch (operations[operationIndex]) {
             case OperationRightArrow:
@@ -173,7 +174,11 @@ class Interpreter {
                 std::cin >> tape[dataPointer]; 
                 break;
             case OperationPeriod:
-                std::cout << (char) tape[dataPointer] << std::flush;
+                std::cout << (char) tape[dataPointer];
+                flushCount++;
+
+                // Flush only on roll over
+                if (flushCount == 0) { std::cout << std::flush; }
                 break;
             case OperationLeftBracket:
                 if (tape[dataPointer] == 0) {
@@ -187,12 +192,65 @@ class Interpreter {
                 break;
             case OperationClear:
                 tape[dataPointer] = 0;
+                break;
             default:
                 break;
             }
 
             operationIndex++;
         }
+
+        // Flush at the end
+        std::cout << std::flush;
+    }
+
+    void generateCSource(std::string filename) {
+        std::ofstream out(filename);
+
+        out << "#include <stdio.h>" << std::endl;
+        out << "#include <stdint.h>" << std::endl;
+        out << "uint8_t t[30000];int p = 0;int main() {";
+        
+        size_t operationIndex = 0;
+        size_t operationSize = operations.size();
+
+        while (operationIndex < operationSize) {
+            switch (operations[operationIndex]) {
+            case OperationRightArrow:
+                out << "p+=" << num_times[operationIndex] << ";";
+                break;
+            case OperationLeftArrow:
+                out << "p-=" << num_times[operationIndex] << ";";
+                break;
+            case OperationPlusSign:
+                out << "t[p]+=" << num_times[operationIndex] << ";";
+                break;
+            case OperationMinusSign:
+                out << "t[p]-=" << num_times[operationIndex] << ";";
+                break;
+            case OperationComma:
+                out << "t[p]=getchar();";
+                break;
+            case OperationPeriod:
+                out << "putchar(t[p]);";
+                break;
+            case OperationLeftBracket:
+                out << "while(t[p]) {";
+                break;
+            case OperationRightBracket:
+                out << "}";
+                break;
+            case OperationClear:
+                out << "t[p] = 0;";
+                break;
+            default:
+                break;
+            }
+
+            operationIndex++;
+        }
+
+        out << "return 0;}"<< std::endl;
     }
 };
 
@@ -205,7 +263,8 @@ int main(int argc, char **argv) {
     Interpreter interpreter;
     std::string filename = argv[1];
     interpreter.parseFile(filename);
-    interpreter.interpret();
+    // interpreter.interpret();
+    interpreter.generateCSource("out.c");
 
     return 0;
 }

@@ -2,3 +2,5 @@ callgrind.out.*
 interpreter
 interpreter.dSYM/
 .vscode/
+out
+out.c

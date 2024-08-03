@@ -5,3 +5,6 @@ INCLUDE = -Iinclude -I/usr/local/include -I/usr/include
 
 interpreter: interpreter.cpp
 	$(CC) $(LDFLAGS) -std=c++17 -Wall -O3 -g -o interpreter interpreter.cpp
+
+outputf: out.c
+	gcc $(LDFLAGS) -O3 -o out out.c
