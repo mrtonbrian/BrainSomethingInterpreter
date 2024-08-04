@@ -212,7 +212,7 @@ class Interpreter {
 
         out << "#include <stdio.h>" << std::endl;
         out << "#include <stdint.h>" << std::endl;
-        out << "uint8_t t[30000]; memset(arr, 0, sizeof(arr)); int p = 0;int main() {";
+        out << "uint8_t t[30000] = {0}; int p = 0;int main() {";
         
         size_t operationIndex = 0;
         size_t operationSize = operations.size();
@@ -259,10 +259,10 @@ class Interpreter {
 
 void printUsage(std::string progName) {
     std::cout << "Usage:" << std::endl
-            << progName << " input_file.b [--generate -o output.c]" << std::endl
+            << progName << " input_file.b [--generate -o out.c]" << std::endl
             << "Options:" << std::endl
-            << "  --generate      Generate C code from the Brainfuck file" << std::endl
-            << "  -o <output.c>          Specify the output C file" << std::endl;
+            << "  --generate      Generate C code from the Brainfk file" << std::endl
+            << "  -o <out.c>          Specify the output C file" << std::endl;
 
 }
 
