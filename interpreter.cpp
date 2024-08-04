@@ -7,6 +7,8 @@
 #include <fstream>
 #include <algorithm>
 
+#include <unistd.h>
+
 enum OperationType {
     OperationLeftArrow,
     OperationRightArrow,
@@ -156,13 +158,14 @@ class Interpreter {
             switch (operations[operationIndex]) {
             case OperationRightArrow:
                 dataPointer += num_times[operationIndex];
-                if (dataPointer > tape.size()) {
-                    tape.resize(tape.size() * 2, 0);
-                }
+                // if (dataPointer > tape.size()) {
+                //     tape.resize(tape.size() * 2, 0);
+                // }
 
                 break;
             case OperationLeftArrow:
-                dataPointer = std::max(dataPointer - num_times[operationIndex], (size_t) 0);
+                // dataPointer = std::max(dataPointer - num_times[operationIndex], (size_t) 0);
+                dataPointer -= num_times[operationIndex];
                 break;
             case OperationPlusSign:
                 tape[dataPointer] += num_times[operationIndex];
@@ -209,7 +212,7 @@ class Interpreter {
 
         out << "#include <stdio.h>" << std::endl;
         out << "#include <stdint.h>" << std::endl;
-        out << "uint8_t t[30000];int p = 0;int main() {";
+        out << "uint8_t t[30000]; memset(arr, 0, sizeof(arr)); int p = 0;int main() {";
         
         size_t operationIndex = 0;
         size_t operationSize = operations.size();
@@ -254,17 +257,54 @@ class Interpreter {
     }
 };
 
+void printUsage(std::string progName) {
+    std::cout << "Usage:" << std::endl
+            << progName << " input_file.b [--generate -o output.c]" << std::endl
+            << "Options:" << std::endl
+            << "  --generate      Generate C code from the Brainfuck file" << std::endl
+            << "  -o <output.c>          Specify the output C file" << std::endl;
+
+}
+
 int main(int argc, char **argv) {
-    if (argc == 1) {
-        std::cerr << "Error: No filename specified!" << std::endl;
+    if (argc < 2) {
+        std::cerr << "Error: Too few arguments.\n";
+        printUsage(argv[0]);
         return 1;
     }
+
+    std::string inputFile = argv[1];
+    bool generateCCode = false;
+    std::string outputFile;
+
+    for (int i = 2; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--generate") {
+            generateCCode = true;
+        } else if (arg == "-o" && i + 1 < argc) {
+            outputFile = argv[++i];
+        } else {
+            std::cerr << "Error: Unknown option " << arg << "\n";
+            printUsage(argv[0]);
+            return 1;
+        }
+    }
+
+    if (generateCCode && outputFile.empty()) {
+        std::cerr << "Error: Output file must be specified with -o when using --generate-c-code.\n";
+        printUsage(argv[0]);
+        return 1;
+    }
+
 
     Interpreter interpreter;
     std::string filename = argv[1];
     interpreter.parseFile(filename);
-    // interpreter.interpret();
-    interpreter.generateCSource("out.c");
+    if (!generateCCode) {
+        interpreter.interpret();
+    } else {
+        interpreter.generateCSource(outputFile);
+    }
 
     return 0;
 }
